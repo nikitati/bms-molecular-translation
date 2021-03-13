@@ -1,0 +1,22 @@
+name: bms-common
+channels:
+  - pytorch
+  - rdkit
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.9
+  - pip
+  - pandas
+  - numpy
+  - scipy
+  - matplotlib
+  - seaborn
+  - rdkit
+  - opencv
+  - pytorch 
+  - torchvision
+  - jupyterlab
+  - pip:
+    - tqdm
+    - Pillow
