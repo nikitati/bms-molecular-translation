@@ -16,7 +16,11 @@ dependencies:
   - opencv
   - pytorch 
   - torchvision
+  - pytorch-lightning
   - jupyterlab
+  - editdistance
   - pip:
+    - click
     - tqdm
     - Pillow
+    - deepsmiles
