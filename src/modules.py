@@ -8,20 +8,42 @@ import pytorch_lightning as pl
 
 class Encoder(nn.Module):
 
-    def __init__(self, encoded_image_size: int, fine_tune: bool):
+    def __init__(
+        self,
+        encoded_image_size: int,
+        is_grayscale: bool,
+        fine_tune: bool = True,
+        model: str = 'resnet18',
+        pretrained: bool = False
+        ):
         """
         :param encoded_image_size: output tensor WxH dimensions
         :param fine_tune: enable fine-tuning of residual blocks 2-4
+        :param model: model name corresponding to the model from torchvision library
+        :param pretrained: load pretrained weights
         """
         self.encoded_image_size = encoded_image_size
+        self.is_grayscale = is_grayscale
         self.fine_tune = fine_tune
-        self.encoder_net = self._make_encoder_net(encoded_image_size)
-        self.encoder_net = self._fine_tune_params(fine_tune)
+        self.model = model
+        self.pretrained = pretrained
+        self.encoder_net = self._make_encoder_net(encoded_image_size, pretrained, model)
+        if self.pretrained:
+            self.encoder_net = self._fine_tune_params(fine_tune)
     
-    def _make_encoder_net(self, encoded_image_size: int):
-        resnet = torchvision.models.resnet34(pretrained=True)
-        resnet.avgpool = nn.AdaptiveAvgPool2d(2 * (encoded_image_size,))
+    def _make_encoder_net(self):
+        model_builder = getattr(torchvision.models, self.model)
+        resnet = model_builder(pretrained=self.pretrained)
+        resnet.avgpool = nn.AdaptiveAvgPool2d(2 * (self.encoded_image_size,))
         resnet.fc = nn.Identity()
+        if self.is_grayscale:
+            resnet.conv1 = nn.Conv2d(
+                3, 64,
+                kernel_size=(7, 7),
+                stride=(2, 2),
+                padding=(3, 3),
+                bias=False
+            )
         return resnet
     
     def _fine_tune_params(self, resnet: nn.Module, fine_tune: bool):
