@@ -2,6 +2,7 @@ name: bms-common
 channels:
   - pytorch
   - rdkit
+  - huggingface
   - conda-forge
   - defaults
 dependencies:
@@ -12,6 +13,8 @@ dependencies:
   - scipy
   - matplotlib
   - seaborn
+  - scikit-learn
+  - imbalanced-learn
   - rdkit
   - opencv
   - pytorch 
@@ -19,8 +22,12 @@ dependencies:
   - pytorch-lightning
   - jupyterlab
   - editdistance
+  - imgaug
+  - albumentations
+  - transformers
   - pip:
     - click
     - tqdm
     - Pillow
     - deepsmiles
+    - selfies
