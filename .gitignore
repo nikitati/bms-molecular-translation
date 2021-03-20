@@ -2,6 +2,9 @@
 .vscode
 .ipynb_checkpoints/
 
+__pycache__
+
 data
 papers
 notes
+sandbox.ipynb
