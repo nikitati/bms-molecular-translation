@@ -1,7 +1,7 @@
 epochs: 1
 target: selfies
 imsize: 224
-batch_size: 4
+batch_size: 64
 encoded_image_size: 14
 input_grayscale: False
 encoder_model: resnet18
@@ -15,4 +15,4 @@ decoder_dropout: 0.5
 learning_rate: 0.004
 max_grad_norm: 5
 max_pred_len: 120
-gpus: 0
+gpus: 1

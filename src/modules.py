@@ -1,51 +1,53 @@
 from itertools import islice
 
+import numpy as np
 import torch
 import torch.nn as nn
 import torchvision
-import pytorch_lightning as pl
 
 
 class Encoder(nn.Module):
 
     def __init__(
-        self,
-        encoded_image_size: int,
-        is_grayscale: bool,
-        fine_tune: bool = True,
-        model: str = 'resnet18',
-        pretrained: bool = False
-        ):
+            self,
+            encoded_image_size: int,
+            is_grayscale: bool,
+            fine_tune: bool = True,
+            model: str = 'resnet18',
+            pretrained: bool = False
+    ):
         """
         :param encoded_image_size: output tensor WxH dimensions
         :param fine_tune: enable fine-tuning of residual blocks 2-4
         :param model: model name corresponding to the model from torchvision library
         :param pretrained: load pretrained weights
         """
+        super(Encoder, self).__init__()
         self.encoded_image_size = encoded_image_size
         self.is_grayscale = is_grayscale
         self.fine_tune = fine_tune
         self.model = model
         self.pretrained = pretrained
-        self.encoder_net = self._make_encoder_net(encoded_image_size, pretrained, model)
+        self.encoder_net = self._make_encoder_net()
+        self.adaptive_pool = nn.AdaptiveAvgPool2d((encoded_image_size, encoded_image_size))
         if self.pretrained:
-            self.encoder_net = self._fine_tune_params(fine_tune)
-    
+            self.encoder_net = self._fine_tune_params(self.encoder_net, fine_tune)
+
     def _make_encoder_net(self):
         model_builder = getattr(torchvision.models, self.model)
         resnet = model_builder(pretrained=self.pretrained)
-        resnet.avgpool = nn.AdaptiveAvgPool2d(2 * (self.encoded_image_size,))
-        resnet.fc = nn.Identity()
+        modules = list(resnet.children())[:-2]
+        resnet = nn.Sequential(*modules)
         if self.is_grayscale:
             resnet.conv1 = nn.Conv2d(
-                3, 64,
+                1, 64,
                 kernel_size=(7, 7),
                 stride=(2, 2),
                 padding=(3, 3),
                 bias=False
             )
         return resnet
-    
+
     def _fine_tune_params(self, resnet: nn.Module, fine_tune: bool):
         for param in resnet.parameters():
             param.requires_grad = False
@@ -53,7 +55,7 @@ class Encoder(nn.Module):
             for param in child.parameters():
                 param.requires_grad = fine_tune
         return resnet
-    
+
     def forward(self, x):
         y = self.encoder_net(x)
         y = y.permute(0, 2, 3, 1)
@@ -96,7 +98,7 @@ class DecoderWithAttention(nn.Module):
     Decoder.
     """
 
-    def __init__(self, attention_dim, embed_dim, decoder_dim, vocab_size, encoder_dim, dropout=0.5):
+    def __init__(self, attention_dim, embed_dim, decoder_dim, vocab_size, encoder_dim, device, dropout=0.5):
         """
         :param attention_dim: size of attention network
         :param embed_dim: embedding size
@@ -113,6 +115,7 @@ class DecoderWithAttention(nn.Module):
         self.decoder_dim = decoder_dim
         self.vocab_size = vocab_size
         self.dropout = dropout
+        self.device = device
 
         self.attention = Attention(encoder_dim, decoder_dim, attention_dim)  # attention network
 
@@ -193,8 +196,8 @@ class DecoderWithAttention(nn.Module):
         decode_lengths = (caption_lengths - 1).tolist()
 
         # Create tensors to hold word predicion scores and alphas
-        predictions = torch.zeros(batch_size, max(decode_lengths), vocab_size).to(device)
-        alphas = torch.zeros(batch_size, max(decode_lengths), num_pixels).to(device)
+        predictions = torch.zeros(batch_size, max(decode_lengths), vocab_size).to(self.device)
+        alphas = torch.zeros(batch_size, max(decode_lengths), num_pixels).to(self.device)
 
         # At each time-step, decode by
         # attention-weighing the encoder's output based on the decoder's previous hidden state output
@@ -213,3 +216,30 @@ class DecoderWithAttention(nn.Module):
             alphas[:batch_size_t, t, :] = alpha
 
         return predictions, encoded_captions, decode_lengths, alphas, sort_ind
+
+    def decode(self, encoder_out, decode_lengths, tokenizer):
+        batch_size = encoder_out.size(0)
+        encoder_dim = encoder_out.size(-1)
+        vocab_size = self.vocab_size
+        encoder_out = encoder_out.view(batch_size, -1, encoder_dim)  # (batch_size, num_pixels, encoder_dim)
+        num_pixels = encoder_out.size(1)
+        # embed start tocken for LSTM input
+        start_tockens = torch.ones(batch_size, dtype=torch.long).to(self.device) * tokenizer.stoi["<SOS>"]
+        embeddings = self.embedding(start_tockens)
+        # initialize hidden state and cell state of LSTM cell
+        h, c = self.init_hidden_state(encoder_out)  # (batch_size, decoder_dim)
+        predictions = torch.zeros(batch_size, decode_lengths, vocab_size).to(self.device)
+        # predict sequence
+        for t in range(decode_lengths):
+            attention_weighted_encoding, alpha = self.attention(encoder_out, h)
+            gate = self.sigmoid(self.f_beta(h))  # gating scalar, (batch_size_t, encoder_dim)
+            attention_weighted_encoding = gate * attention_weighted_encoding
+            h, c = self.decode_step(
+                torch.cat([embeddings, attention_weighted_encoding], dim=1),
+                (h, c))  # (batch_size_t, decoder_dim)
+            preds = self.fc(self.dropout(h))  # (batch_size_t, vocab_size)
+            predictions[:, t, :] = preds
+            if np.argmax(preds.detach().cpu().numpy()) == tokenizer.stoi["<EOS>"]:
+                break
+            embeddings = self.embedding(torch.argmax(preds, -1))
+        return predictions
