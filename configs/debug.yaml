@@ -1,0 +1,15 @@
+target: selfies
+imsize: 224
+batch_size: 64
+encoded_image_size: 14
+input_grayscale: False
+encoder_model: resnet18
+encoder_fine_tune: False
+encoder_pretrained: False
+attention_dim: 256
+embedding_dim: 256
+decoder_dim: 512
+encoder_dim: 512
+decoder_dropout: 0.5
+learning_rate: 0.0004
+max_grad_norm: 5
