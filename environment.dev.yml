@@ -1,4 +1,4 @@
-name: bms-common
+name: bms-dev
 channels:
   - pytorch
   - rdkit
@@ -6,7 +6,7 @@ channels:
   - conda-forge
   - defaults
 dependencies:
-  - python=3.9
+  - python=3.8
   - pip
   - pandas
   - numpy
@@ -19,6 +19,7 @@ dependencies:
   - opencv
   - pytorch 
   - torchvision
+  - cpuonly
   - pytorch-lightning
   - jupyterlab
   - editdistance
