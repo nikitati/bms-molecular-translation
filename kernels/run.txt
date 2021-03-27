@@ -1,0 +1,2 @@
+kaggle kernels pull -k nikitati/bms-captioning-train -p kernels/captioning_train -m
+kaggle kernels push -p kernels/captioning_train

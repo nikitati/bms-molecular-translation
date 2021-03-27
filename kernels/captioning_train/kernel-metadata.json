@@ -1,0 +1,21 @@
+{
+  "id": "nikitati/bms-captioning-train",
+  "id_no": 15796978,
+  "title": "BMS captioning train",
+  "code_file": "train.ipynb",
+  "language": "python",
+  "kernel_type": "notebook",
+  "is_private": true,
+  "enable_gpu": true,
+  "enable_internet": true,
+  "keywords": [
+    "gpu"
+  ],
+  "dataset_sources": [
+    "nikitati/bms-custom"
+  ],
+  "kernel_sources": [],
+  "competition_sources": [
+    "bms-molecular-translation"
+  ]
+}
