@@ -196,8 +196,8 @@ class DecoderWithAttention(nn.Module):
         decode_lengths = (caption_lengths - 1).tolist()
 
         # Create tensors to hold word predicion scores and alphas
-        predictions = torch.zeros(batch_size, max(decode_lengths), vocab_size).to(self.device)
-        alphas = torch.zeros(batch_size, max(decode_lengths), num_pixels).to(self.device)
+        predictions = torch.zeros(batch_size, max(decode_lengths), vocab_size).type_as(h)
+        alphas = torch.zeros(batch_size, max(decode_lengths), num_pixels).type_as(h)
 
         # At each time-step, decode by
         # attention-weighing the encoder's output based on the decoder's previous hidden state output
@@ -224,11 +224,15 @@ class DecoderWithAttention(nn.Module):
         encoder_out = encoder_out.view(batch_size, -1, encoder_dim)  # (batch_size, num_pixels, encoder_dim)
         num_pixels = encoder_out.size(1)
         # embed start tocken for LSTM input
-        start_tockens = torch.ones(batch_size, dtype=torch.long).to(self.device) * tokenizer.stoi["<SOS>"]
+        start_tockens = torch.ones(
+            batch_size,
+            dtype=torch.long,
+            device=self.embedding.weight.device
+        ) * tokenizer.stoi["<SOS>"]
         embeddings = self.embedding(start_tockens)
         # initialize hidden state and cell state of LSTM cell
         h, c = self.init_hidden_state(encoder_out)  # (batch_size, decoder_dim)
-        predictions = torch.zeros(batch_size, decode_lengths, vocab_size).to(self.device)
+        predictions = torch.zeros(batch_size, decode_lengths, vocab_size).type_as(h)
         # predict sequence
         for t in range(decode_lengths):
             attention_weighted_encoding, alpha = self.attention(encoder_out, h)

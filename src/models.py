@@ -30,6 +30,21 @@ class MolecularCaptioningModel(pl.LightningModule):
             max_pred_len=120
     ):
         super(MolecularCaptioningModel, self).__init__()
+        self.save_hyperparameters(
+            "learning_rate",
+            "encoded_image_size",
+            "input_grayscale",
+            "encoder_model",
+            "encoder_fine_tune",
+            "encoder_pretrained",
+            "attention_dim",
+            "embedding_dim",
+            "decoder_dim",
+            "encoder_dim",
+            "decoder_dropout",
+            "target",
+            "max_pred_len"
+        )
         self.learning_rate = learning_rate
         self.encoder = Encoder(
             encoded_image_size=encoded_image_size,
