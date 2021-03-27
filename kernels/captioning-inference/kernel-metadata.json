@@ -1,0 +1,20 @@
+{
+  "id": "nikitati/bms-captioning-inference",
+  "id_no": 15818341,
+  "title": "BMS captioning inference",
+  "code_file": "inference.ipynb",
+  "language": "python",
+  "kernel_type": "notebook",
+  "is_private": true,
+  "enable_gpu": true,
+  "enable_internet": true,
+  "keywords": [],
+  "dataset_sources": [
+    "nikitati/bms-custom",
+    "nikitati/bms-models"
+  ],
+  "kernel_sources": [],
+  "competition_sources": [
+    "bms-molecular-translation"
+  ]
+}
