@@ -14,7 +14,10 @@ def inchi2smiles(inchi_str: str):
 def smiles2inchi(smiles_str: str):
     mol = Chem.MolFromSmiles(smiles_str)
     if mol is not None:
-        inchi_str = inchi.MolToInchi(mol)
+        try:
+            inchi_str = inchi.MolToInchi(mol)
+        except:
+            inchi_str = "InChI=1S/"
     else:
         inchi_str = "InChI=1S/"
     return inchi_str

@@ -254,7 +254,7 @@ class MolecularCaptioningDataModule(pl.LightningDataModule):
     def val_dataloader(self):
         return DataLoader(
             self.val,
-            batch_size=4,
+            batch_size=1024,
             num_workers=self.num_workers,
             shuffle=False,
             drop_last=False,

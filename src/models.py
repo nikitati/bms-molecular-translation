@@ -70,7 +70,12 @@ class MolecularCaptioningModel(pl.LightningModule):
         self.criterion = nn.CrossEntropyLoss(ignore_index=tokenizer.stoi["<PAD>"])
 
     def forward(self, images):
-        pass
+        encoded = self.encoder(images)
+        predictions = self.decoder.decode(encoded, self.max_pred_len, self.tokenizer)
+        predicted_sequence = torch.argmax(predictions.detach().cpu(), -1).numpy()
+        predicted_sequences = [self.tokenizer.reverse_tokenize(seq) for seq in predicted_sequence]
+        translated_sequences = [self.translate_fn(seq) for seq in predicted_sequences]
+        return translated_sequences
 
     def _compute_loss(self, images, labels, label_lengths):
         features = self.encoder(images)

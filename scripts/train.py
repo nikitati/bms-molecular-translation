@@ -49,9 +49,11 @@ def main(config, dataset, targets, test_path):
     )
     trainer = pl.Trainer(
         deterministic=True,
+        resume_from_checkpoint=conf.get('checkpoint', None),
         gpus=conf['gpus'],
         max_epochs=conf['epochs'],
-        gradient_clip_val=conf['max_grad_norm']
+        gradient_clip_val=conf['max_grad_norm'],
+        precision=16
     )
     trainer.fit(model, datamodule)
 
