@@ -8,13 +8,13 @@
   "is_private": true,
   "enable_gpu": true,
   "enable_internet": true,
-  "keywords": [
-    "gpu"
-  ],
+  "keywords": [],
   "dataset_sources": [
     "nikitati/bms-custom"
   ],
-  "kernel_sources": [],
+  "kernel_sources": [
+    "nikitati/bms-captioning-train"
+  ],
   "competition_sources": [
     "bms-molecular-translation"
   ]
